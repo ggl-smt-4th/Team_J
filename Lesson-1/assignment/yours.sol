@@ -40,6 +40,7 @@ contract Payroll {
                 employee = employees[i].employee;
                 lastPayDay = employees[i].lastPayDay;
                 index = i;
+                break;
             }
         }
     }
@@ -48,24 +49,19 @@ contract Payroll {
         if(msg.sender!=owner){
             revert();
         }
-        uint slr;
         address employee;
-        uint lastPayDay;
-        uint index;
-        (slr, employee, lastPayDay, index) = getEmployee(addr);
+        (, employee, , ) = getEmployee(addr);
         if(employee != 0x0){
             revert();
         }
-        employees.push(Employee(salary,addr,now));
+        employees.push(Employee(salary * 1 ether,addr,now));
     }
     
     function updateAddress(address newAddr){
         address sender = msg.sender;
-        uint slr;
         address employee;
-        uint lastPayDay;
         uint index;
-        (slr, employee, lastPayDay, index) = getEmployee(sender);
+        (, employee, , index) = getEmployee(sender);
         if(employee == 0x0){
             revert();
         }
@@ -84,7 +80,11 @@ contract Payroll {
         if(employee == 0x0){
             revert();
         }
-        employees[index].salary = salary;
+        
+        uint totalSalary = (now - lastPayDay) / payDuration * slr;
+        employees[index].lastPayDay = now;
+        employees[index].salary = salary * 1 ether;
+        employee.transfer(totalSalary);
     }
     
     function deleteEmployee(address addr){
@@ -99,16 +99,12 @@ contract Payroll {
         if(employee == 0x0){
             revert();
         }
-        for(uint i = index;i < employees.length-1;i++){
-            employees[index] = employees[index +1];
-        }
+        employees[index] =  employees[employees.length-1];
         delete employees[employees.length-1];
         employees.length--;
         
-        for(;lastPayDay+payDuration<now;){
-            lastPayDay = lastPayDay+payDuration;
-            employee.transfer(slr);
-        }
+        uint totalSalary = (now - lastPayDay) / payDuration * slr;
+        employee.transfer(totalSalary);
     }
     
    function getPaid() {
