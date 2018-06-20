@@ -34,9 +34,7 @@ contract Payroll {
     function payoff() returns (bool) {
         if (employee != 0x0) {
             uint payment = salary * (now - lastPayday) / payDuration;
-            if (payment > this.balance) {
-                return false;
-            }
+            require (payment < this.balance);
             employee.transfer(payment);
         }
 
