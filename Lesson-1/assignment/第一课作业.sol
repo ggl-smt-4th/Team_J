@@ -29,6 +29,12 @@ contract Payroll {
         
         require(msg.sender == owner); 
         
+        if (employee != address(0)) {
+            uint sparePayment = salary * (now - lastPayday) / payDuration; 
+            lastPayday = now;
+            employee.transfer(sparePayment);
+        }
+        
         salary= _salary * 1 ether; 
     }
     
