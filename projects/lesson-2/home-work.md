@@ -51,3 +51,14 @@
  transaction cost 	30063 gas 
  execution cost 	8791 gas 
 ```
+
+# calculateRunway() 函数的优化
+
+## 思路
+
+calculateRunway函数每次调用都时候，employees长度都有变化并不断加长，导致gas消耗逐渐增加。
+
+## 过程
+
+将totalSalary 初始化定义到storage里面，每次更新employee状态时一起更改。
+
