@@ -81,7 +81,7 @@ contract Payroll {
 
     function getPaid() public {
         var (employee,index) = _findEmployee(msg.sender);
-        assert(employee.id == 0x00);
+        assert(employee.id != 0x00);
 
         uint nextPayday = employee.lastPayday + payDuration;
         assert(nextPayday < now);
