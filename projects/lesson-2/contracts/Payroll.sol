@@ -36,7 +36,7 @@ contract Payroll {
         require(msg.sender == owner);
         
        var(employee,index) = _findEmployee(employeeAddress);
-        assert(employee.id != 0x0);
+        assert(employee.id == 0x0);
         employees.push(Employee(employeeAddress,salary * 1 ether,now));
         
     }
@@ -79,7 +79,8 @@ contract Payroll {
     }
 
     function getPaid() public {
-        require(hasEnoughFund() == true);
+        //require(hasEnoughFund()==true);
+
         var(employee,index) = _findEmployee(msg.sender);
         assert(employee.id != 0x0);
         
