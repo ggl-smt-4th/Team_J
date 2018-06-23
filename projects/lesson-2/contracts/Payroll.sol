@@ -79,7 +79,7 @@ contract Payroll {
     }
 
     function getPaid() public {
-        require(hasEnoughFund()==true);
+        require(hasEnoughFund() == true);
         var(employee,index) = _findEmployee(msg.sender);
         assert(employee.id != 0x0);
         
