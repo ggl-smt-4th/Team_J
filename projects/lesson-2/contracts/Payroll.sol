@@ -4,7 +4,7 @@ contract Payroll {
 
     struct Employee {
         address id;
-        uint salary;
+        uint salary; 
         uint lastPayday;
     }
 
@@ -18,36 +18,35 @@ contract Payroll {
     function Payroll() payable public {
         owner = msg.sender;
     }
-    
-    function _partialPaid(Employee employee) private {
-        uint sparePayment = employee.salary * (now - employee.lastPayday) / payDuration; 
-        employee.id.transfer(sparePayment); 
-    }
-    
-    function _findEmployee(address _employeeId) private returns ( Employee ,uint){ 
-        for (uint i =0; i<employees.length; i++) {
-            if (employees[i].id == _employeeId) {
+
+    function _findEmployee(address employeeId) private returns ( Employee ,uint) { 
+        for (uint i =0; i < employees.length; i++) {
+            if (employees[i].id == employeeId) {
                 return (employees[i],i);
             }
         }
     }
 
+    function _partialPaid(Employee employee) private {
+        uint sparePayment = employee.salary * (now - employee.lastPayday) / payDuration; 
+        employee.id.transfer(sparePayment); 
+    }
+
     function addEmployee(address employeeAddress, uint salary) public {
         require(msg.sender == owner);
-       var (employee,index) = _findEmployee(employeeAddress);
-        
+        var (employee,index) = _findEmployee(employeeAddress);
+     
         assert(employee.id == 0x0);
-        
+        salary = salary * 1 ether;
         employees.push(Employee(employeeAddress,salary,now));
-        employChanged =true;
+        employChanged = true;
     }
 
     function removeEmployee(address employeeId) public {
         require(msg.sender == owner);
         var (employee,index) = _findEmployee(employeeId);
         
-        assert(employee.id != address(0));
-        
+        assert(employee.id != 0x0);
         delete employees[index];
         employees[index] = employees[employees.length-1];
         employees.length -= 1; 
@@ -56,13 +55,14 @@ contract Payroll {
 
     function updateEmployee(address employeeAddress, uint salary) public {
         require(msg.sender == owner);
-          var (employee,index) = _findEmployee(employeeAddress);
-         assert(employee.id != address(0));
+        var (employee,index) = _findEmployee(employeeAddress);
+        assert(employee.id != 0x0);
          
-         _partialPaid(employee); 
-         employee.salary=salary;  
-         employee.lastPayday=now; 
-         employChanged =true;
+        _partialPaid(employee); 
+        salary= salary * 1 ether;
+        employees[index].salary=salary;  
+        employees[index].lastPayday=now; 
+        employChanged =true;
     }
 
     function addFund() payable public returns (uint) {
@@ -70,7 +70,7 @@ contract Payroll {
     }
 
     function calculateRunway() public view returns (uint) {
-         if(employChanged){
+        if(employChanged){
             totalSalary=0;
             for(uint i=0; i<employees.length; i++) {
                 totalSalary +=employees[i].salary;
@@ -80,7 +80,7 @@ contract Payroll {
         
         assert(totalSalary > 0 );
         
-        return this.balance / totalSalary;
+        return address(this).balance / totalSalary;
     }
 
     function hasEnoughFund() public view returns (bool) {
@@ -89,15 +89,15 @@ contract Payroll {
 
     function getPaid() public {
         var (employee,index) = _findEmployee(msg.sender);
-        assert(employee.id !=address(0));
+        assert(employee.id !=0x0);
                 
         uint nextPayDay = employee.lastPayday + payDuration;
         
         assert(nextPayDay < now); 
         
         employees[index].lastPayday = nextPayDay;
-        employees[index].id.transfer(employee.salary);
-        
+        employees[index].id.transfer(employee.salary); 
+       
     }
 }
 
