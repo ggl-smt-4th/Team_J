@@ -13,7 +13,6 @@ contract Payroll {
     address owner;
     Employee[] employees;
     uint totalSalary;
-    bool employChanged; 
 
     function Payroll() payable public {
         owner = msg.sender;
@@ -35,11 +34,12 @@ contract Payroll {
     function addEmployee(address employeeAddress, uint salary) public {
         require(msg.sender == owner);
         var (employee,index) = _findEmployee(employeeAddress);
-     
+
         assert(employee.id == 0x0);
+
         salary = salary * 1 ether;
         employees.push(Employee(employeeAddress,salary,now));
-        employChanged = true;
+        totalSalary +=salary;
     }
 
     function removeEmployee(address employeeId) public {
@@ -47,10 +47,10 @@ contract Payroll {
         var (employee,index) = _findEmployee(employeeId);
         
         assert(employee.id != 0x0);
+        totalSalary = totalSalary - employees[index].salary;
         delete employees[index];
         employees[index] = employees[employees.length-1];
         employees.length -= 1; 
-        employChanged = true;
     }
 
     function updateEmployee(address employeeAddress, uint salary) public {
@@ -59,10 +59,11 @@ contract Payroll {
         assert(employee.id != 0x0);
          
         _partialPaid(employee); 
-        salary= salary * 1 ether;
+        totalSalary -=employees[index].salary;
+        salary= salary * 1 ether;        
         employees[index].salary=salary;  
         employees[index].lastPayday=now; 
-        employChanged =true;
+        totalSalary +=employees[index].salary;
     }
 
     function addFund() payable public returns (uint) {
@@ -70,16 +71,7 @@ contract Payroll {
     }
 
     function calculateRunway() public view returns (uint) {
-        if(employChanged){
-            totalSalary=0;
-            for(uint i=0; i<employees.length; i++) {
-                totalSalary +=employees[i].salary;
-            }
-            employChanged = false;
-        }
-        
         assert(totalSalary > 0 );
-        
         return address(this).balance / totalSalary;
     }
 

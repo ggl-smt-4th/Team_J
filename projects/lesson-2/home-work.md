@@ -31,5 +31,6 @@ function calculateRunway() returns (uint) {
   
 
 - ##### 智能合约代码优化如下：
-    - 1、将totalSalary设置为合约状态变量。
-    - 2、新增employChanged状态变量，监测员工数量或者员工薪水是否改变. 如(员工增加、员工删除、员工薪水修改)
+    - 1、设置totalSalary为全局合约状态变量。
+    - 2、在addEmployee()、removeEmployee()、updateEmployee()函数中对totalSalary根据场景进行变化。
+    - 3、calculateRunway，用address(this).balance / totalSalary，每次gas消耗一样。
