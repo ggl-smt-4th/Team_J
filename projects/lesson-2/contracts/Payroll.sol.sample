@@ -1,6 +1,6 @@
 pragma solidity ^0.4.14;
 contract paoyroll{
-    uint constant payDuration = 10 seconds;
+    uint constant payDuration = 30 days	;
     
     struct Employee{
         address id ;
