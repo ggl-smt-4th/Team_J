@@ -24,6 +24,7 @@ contract Payroll {
                 return (employees[i],i);
             }
         }
+        return (Employee(0,0,0), 0);
     }
 
     function _partialPaid(Employee employee) private {
