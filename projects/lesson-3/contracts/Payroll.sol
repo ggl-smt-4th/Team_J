@@ -65,7 +65,6 @@ contract Payroll is Ownable {
     function updateEmployee(address employeeId, uint salary) public onlyOwner employeeExist(employeeId) {
         // TODO: your code here
         var employee = employees[employeeId];
-        assert(employee.id != 0x0);
 
         _partialPaid(employee);
         totalSalary = totalSalary.sub(employees[employeeId].salary);
