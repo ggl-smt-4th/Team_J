@@ -53,7 +53,7 @@ contract Payroll {
         _partialPaid(employee);
         totalSalary -= employees[employeeAddress].salary;
         employees[employeeAddress].salary = salary * 1 ether;
-        totalSalary -= employees[employeeAddress].salary;
+        totalSalary += employees[employeeAddress].salary;
         employees[employeeAddress].lastPayday = now;
     }
 
