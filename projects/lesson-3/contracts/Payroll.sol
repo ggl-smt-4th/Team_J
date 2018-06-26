@@ -27,7 +27,7 @@ contract Payroll is Ownable {
     }
     
     modifier salaryover0(uint salary){
-        assert(salary > 0);
+        assert(salary < 0);
         _;
     }
 
