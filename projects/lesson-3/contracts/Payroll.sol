@@ -40,8 +40,8 @@ contract Payroll is Ownable {
         // TODO: your code here
         var employee = employees[employeeId];
         assert(employee.id == 0x0);
-        totalSalary = totalSalary.add(salary * 1 ether);
-        employees[employeeId] = Employee(employeeId,salary * 1 ether, now);
+        totalSalary = totalSalary.add(salary.mul(1 ether));
+        employees[employeeId] = Employee(employeeId,salary.mul(1 ether), now);
     }
 
     function removeEmployee(address employeeId) public onlyOwner employeeExist(employeeId) {
@@ -68,7 +68,7 @@ contract Payroll is Ownable {
 
         _partialPaid(employee);
         totalSalary = totalSalary.sub(employees[employeeId].salary);
-        employees[employeeId].salary = salary * 1 ether;
+        employees[employeeId].salary = salary.mul(1 ether);
         totalSalary = totalSalary.add(employees[employeeId].salary);
         employees[employeeId].lastPayday = now;
     }
