@@ -25,6 +25,11 @@ contract Payroll is Ownable {
         assert(employee.id != 0x0);
         _;
     }
+    
+    modifier salaryover0(uint salary){
+        assert(salary > 0);
+        _;
+    }
 
     function Payroll() payable public {
         // TODO: your code here
@@ -36,7 +41,7 @@ contract Payroll is Ownable {
         employee.id.transfer(payment);
     }
 
-    function addEmployee(address employeeId, uint salary) public onlyOwner {
+    function addEmployee(address employeeId, uint salary) public onlyOwner salaryover0(salary) {
         // TODO: your code here
         var employee = employees[employeeId];
         assert(employee.id == 0x0);
@@ -62,7 +67,7 @@ contract Payroll is Ownable {
         employees[newAddress].id = newAddress;
     }
 
-    function updateEmployee(address employeeId, uint salary) public onlyOwner employeeExist(employeeId) {
+    function updateEmployee(address employeeId, uint salary) public onlyOwner employeeExist(employeeId) salaryover0(salary) {
         // TODO: your code here
         var employee = employees[employeeId];
         assert(employee.id != 0x0);
