@@ -24,6 +24,7 @@ contract Payroll {
                 return (employees[i],i);
             }
         }
+        return (Employee(0,0,0), 0);
     }
     
     //计算该员工目前需要支付多少薪水
@@ -81,8 +82,6 @@ contract Payroll {
     }
 
     function getPaid() public {
-        //require(hasEnoughFund()==true);
-
         var(employee,index) = _findEmployee(msg.sender);
         assert(employee.id != 0x0);
         
