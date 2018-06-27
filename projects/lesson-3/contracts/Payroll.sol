@@ -64,10 +64,10 @@ contract Payroll is Ownable {
         salary = salary.mul(1 ether);
         _partialPaid(employee);
 
-        totalSalary = totalSalary.sub(employee.salary);
+        totalSalary = totalSalary.sub(employees[employeeId].salary);
         employees[employeeId].salary = salary;
         employees[employeeId].lastPayday = now;
-        totalSalary = totalSalary.add(employee.salary);
+        totalSalary = totalSalary.add(employees[employeeId].salary);
     }
 
     function addFund() payable public returns (uint) {
