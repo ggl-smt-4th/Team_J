@@ -80,5 +80,13 @@ contract Payroll {
 
     function getPaid() public {
         // TODO: your code here
+        var (employee, index) = _findEmployee(msg.sender);
+        assert(employee.id != 0x0);
+
+        uint nextPayday = employee.lastPayday + payDuration;
+        assert(nextPayday < now);
+
+        employee.lastPayday = nextPayday;
+        employee.id.transfer(employee.salary);
     }
 }
