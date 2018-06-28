@@ -1,37 +1,70 @@
 pragma solidity ^0.4.14;
-
 import './SafeMath.sol';
 import './Ownable.sol';
-
-contract Payroll is Ownable {
-
-    using SafeMath for uint;
-
+contract Payroll is Ownable{
+    
+    
     struct Employee {
-        // TODO, your code here
+        // TODO: your code here
+        address id;
+        uint salary;
+        uint lastPayday;
     }
+    using SafeMath for uint;
+    uint totalSalary = 0;
+    uint index;
+    uint constant payDuration = 30 seconds;
+    address owner;
+    mapping(address => Employee) public employeeMap;
 
-    uint constant payDuration = 30 days;
-    uint public totalSalary = 0;
+    function _partialPaid(Employee employee) private {
+        uint payment = (employee.salary.mul(now.sub(employee.lastPayday))).div(payDuration);
+        employee.id.transfer(payment);
+    }
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+    
+    modifier employeeExist(address employeeId) {
+        assert(employeeMap[employeeId].id != 0x0);
+        _;
+    }
 
     function Payroll() payable public {
-        // TODO: your code here
+        owner = msg.sender;
     }
 
-    function addEmployee(address employeeId, uint salary) public {
-        // TODO: your code here
+    function addEmployee(address employeeId, uint salary) payable public onlyOwner{
+        
+        employeeMap[employeeId] = Employee(employeeId, salary * 1 ether, now);
+        totalSalary += salary;
+    }
+    
+
+    function removeEmployee(address employeeId) payable public {
+        require(msg.sender == owner);
+        assert(employeeMap[employeeId].id != 0x0);
+    
+        _partialPaid(employeeMap[employeeId]);
+        delete employeeMap[employeeId];
     }
 
-    function removeEmployee(address employeeId) public {
-        // TODO: your code here
-    }
 
-    function changePaymentAddress(address oldAddress, address newAddress) public {
-        // TODO: your code here
+    function changePaymentAddress(address oriAddress, address newAddress) public onlyOwner employeeExist(oriAddress) {
+        Employee oriEmployee = employeeMap[oriAddress];
+        employeeMap[newAddress] = Employee(newAddress, oriEmployee.salary, oriEmployee.lastPayday);
+        delete employeeMap[oriAddress];
     }
-
-    function updateEmployee(address employeeId, uint salary) public {
-        // TODO: your code here
+    
+    function updateEmployee(address employeeAddress, uint salary) public onlyOwner{
+        Employee employee = employeeMap[employeeAddress];
+        assert(employee.id != 0x0);
+        _partialPaid(employee);
+        totalSalary -= employee.salary;
+        totalSalary += salary;
+        employee.salary    = salary * 1 ether;
+        employee.lastPayday= now;
     }
 
     function addFund() payable public returns (uint) {
@@ -39,14 +72,23 @@ contract Payroll is Ownable {
     }
 
     function calculateRunway() public view returns (uint) {
-        // TODO: your code here
+        return this.balance / totalSalary;
     }
 
     function hasEnoughFund() public view returns (bool) {
-        // TODO: your code here
+        return calculateRunway() > 0;
     }
 
     function getPaid() public {
-        // TODO: your code here
+        Employee employee = employeeMap[msg.sender];
+        uint nextPayday = employee.lastPayday.add(payDuration);
+        assert(nextPayday < now);
+
+        employee.lastPayday = nextPayday;
+        employee.id.transfer(employee.salary);
+    }
+    
+    function getBanlance() public view returns (uint) {
+        return this.balance;
     }
 }
