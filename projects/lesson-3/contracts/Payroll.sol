@@ -30,7 +30,7 @@ contract Payroll is Ownable {
         //清算工资
     function _partialPaid(Employee employee) private {
         uint payment = employee.salary
-                .mul(now - employee.lastPayday)
+                .mul(now.sub(employee.lastPayday))
                 .div(payDuration);
         employee.id.transfer(payment);
     }
@@ -41,7 +41,7 @@ contract Payroll is Ownable {
 
         salary = salary.mul(1 ether);
         employees[employeeId] = Employee(employeeId,salary,now);
-        totalSalary += salary;
+        totalSalary = totalSalary.add(salary);
     }
 
     function removeEmployee(address employeeId) onlyOwner employeeExit(employeeId) public {
@@ -75,7 +75,7 @@ contract Payroll is Ownable {
     }
 
     function calculateRunway() public view returns (uint) {
-        return this.balance / totalSalary;
+        return this.balance.div(totalSalary);
     }
 
     function hasEnoughFund() public view returns (bool) {
@@ -85,7 +85,7 @@ contract Payroll is Ownable {
     function getPaid() employeeExit(msg.sender) public {
         var employee = employees[msg.sender];
 
-        uint nextPayday = employee.lastPayday + payDuration;
+        uint nextPayday = employee.lastPayday.add(payDuration);
         assert(nextPayday < now);
 
         employees[msg.sender].lastPayday = nextPayday;
