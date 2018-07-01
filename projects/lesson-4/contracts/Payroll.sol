@@ -65,7 +65,8 @@ contract Payroll is Ownable {
         _partialPaid(employee); 
 
         totalSalary =SafeMath.sub(totalSalary,employees[employeeId].salary); 
-        employees[employeeId].salary=salary * 1 ether;  
+        uint e = 1 ether;
+        employees[employeeId].salary=SafeMath.mul(salary,e);
         totalSalary =SafeMath.add(totalSalary,employees[employeeId].salary); 
         employees[employeeId].lastPayday=now; 
     }
