@@ -1,5 +1,6 @@
 var Payroll = artifacts.require("./Payroll.sol");
 
+
 contract('Payroll', function(accounts) {
 
   it("add employee", function() {
