@@ -55,7 +55,7 @@ class App extends Component {
 
     // Declaring this for later so we can chain functions on Payroll.
     var PayrollInstance
-
+  
     // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.setState({
@@ -115,7 +115,7 @@ class App extends Component {
           </Layout>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Payroll ©2017 老董区块链干货铺
+          Payroll ©2018 老董区块链干货铺
         </Footer>
       </Layout>
     );

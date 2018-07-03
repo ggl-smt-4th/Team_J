@@ -61,6 +61,7 @@ contract Payroll is Ownable {
         employeeId.transfer(payment);
     }
 
+
     function addEmployee(address employeeId, uint salary) public onlyOwner shouldNotExist(employeeId) {
         salary = salary.mul(1 ether);
 
