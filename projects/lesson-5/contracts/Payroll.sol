@@ -86,7 +86,7 @@ contract Payroll is Ownable{
         employee.id.transfer(employee.salary);
     }
 
-    function checkInfo() returns (uint balance, uint runway, uint employeeCount) {
+    function getEmployerInfo() returns (uint balance, uint runway, uint employeeCount) {
         balance = this.balance;
         employeeCount = totalEmployee;
         if (totalSalary > 0) {
