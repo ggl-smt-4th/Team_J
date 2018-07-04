@@ -1,35 +1,66 @@
-pragma solidity ^0.4.14;
+pragma solidity ^0.4.17;
 
 import './SafeMath.sol';
 import './Ownable.sol';
 
 contract Payroll is Ownable {
+
+    /**
+     * event will be introduced in lesson 6
+     */
+    event AddFund(address indexed from, uint value);
+    event GetPaid(address indexed employee, uint value);
+    event AddEmployee(address indexed from, address indexed employee, uint salary);
+    event UpdateEmployee(address indexed from, address indexed employee, uint salary);
+    event RemoveEmployee(address indexed from, address indexed removed);
+
     using SafeMath for uint;
+
+    /**
+     * We are using mapping here, the key is already the address.
+     */
     struct Employee {
-        address id;
+        uint index;
         uint salary;
         uint lastPayday;
     }
-    
-    uint constant payDuration = 10 seconds;
 
-    uint totalSalary;
-    uint totalEmployee;
-    address[] employeeList;
-    mapping(address => Employee) public employees;
-
-
-    modifier employeeExit(address employeeId) {
-        var employee = employees[employeeId];
-        assert(employee.id != 0x0);
+    modifier onlyOwner {
+        require(msg.sender == owner);
         _;
     }
-    
-    function _partialPaid(Employee employee) private {
-        uint payment = employee.salary
-            .mul(now.sub(employee.lastPayday))
-            .div(payDuration);
-        employee.id.transfer(payment);
+
+    modifier shouldExist(address employeeId) {
+        assert(employees[employeeId].lastPayday != 0);
+        _;
+    }
+
+    modifier shouldNotExist(address employeeId) {
+        assert(employees[employeeId].lastPayday == 0);
+        _;
+    }
+
+    uint constant PAY_DURATION = 10 seconds;
+    uint public totalSalary = 0;
+    uint totoalEmployee;
+    address[] employeeList;
+    address[] employeeAddressList;
+
+    /**
+     * This contract is simple, We update employees by the key directly
+     * instead of updating a copy so that we could save some gas.
+     */
+    mapping(address => Employee) public employees;
+
+    function Payroll() payable public Ownable {
+        owner = msg.sender;
+    }
+
+    function _partialPaid(address employeeId) private {
+        uint payment = employees[employeeId].salary
+        .mul(now.sub(employees[employeeId].lastPayday))
+        .div(PAY_DURATION);
+        employeeId.transfer(payment);
     }
 
     function checkEmployee(uint index) returns (address employeeId, uint salary, uint lastPayday) {
@@ -38,64 +69,116 @@ contract Payroll is Ownable {
         salary = employee.salary;
         lastPayday = employee.lastPayday;
     }
-    
-    function addEmployee(address employeeId, uint salary) onlyOwner {
-        var employee = employees[employeeId];
-        assert(employee.id == 0x0);
 
-        employees[employeeId] = Employee(employeeId, salary.mul(1 ether), now);
-        totalSalary = totalSalary.add(employees[employeeId].salary);
-        totalEmployee = totalEmployee.add(1);
+    function addEmployee(address employeeId, uint salary) public onlyOwner shouldNotExist(employeeId) {
+        salary = salary.mul(1 ether);
+
+        uint index = employeeAddressList.length;
+        employeeAddressList.push(employeeId);
+        employees[employeeId] = Employee(index, salary, now);
+
+        totalSalary = totalSalary.add(salary);
+        AddEmployee(msg.sender, employeeId, salary);
+        totoalEmployee = totoalEmployee.add(1);
         employeeList.push(employeeId);
     }
-    
-    function removeEmployee(address employeeId) onlyOwner employeeExit(employeeId) {
-        var employee = employees[employeeId];
 
-        _partialPaid(employee);
-        totalSalary = totalSalary.sub(employee.salary);
+    function removeEmployee(address employeeId) public onlyOwner shouldExist(employeeId) {
+        _partialPaid(employeeId);
+
+        uint salary = employees[employeeId].salary;
+        uint index = employees[employeeId].index;
+        totalSalary = totalSalary.sub(salary);
+
         delete employees[employeeId];
-        totalEmployee = totalEmployee.sub(1);
-    }
-    
-    function updateEmployee(address employeeId, uint salary) onlyOwner employeeExit(employeeId) {
-        var employee = employees[employeeId];
 
-        _partialPaid(employee);
-        totalSalary = totalSalary.sub(employee.salary);
-        employee.salary = salary.mul(1 ether);
-        employee.lastPayday = now;
-        totalSalary = totalSalary.add(employee.salary);
+        delete employeeAddressList[index];
+        address moveAddress = employeeAddressList[employeeAddressList.length - 1];
+        employeeAddressList[index] = moveAddress;
+
+        // update index
+        employees[moveAddress].index = index;
+
+        // adjust length
+        employeeAddressList.length -= 1;
+        RemoveEmployee(msg.sender, employeeId);
+        totoalEmployee = totoalEmployee.sub(1);
+        employeeList.push(employeeId)
     }
-    
-    function addFund() payable returns (uint) {
-        return this.balance;
+
+    function changePaymentAddress(address oldAddress, address newAddress) public onlyOwner shouldExist(oldAddress) shouldNotExist(newAddress) {
+        _partialPaid(oldAddress);
+
+        employees[newAddress] = Employee(employees[oldAddress].index, employees[oldAddress].salary, now);
+        delete employees[oldAddress];
     }
-    
-    function calculateRunway() returns (uint) {
-        return this.balance.div(totalSalary);
+
+    function updateEmployee(address employeeId, uint salary) public onlyOwner shouldExist(employeeId) {
+        _partialPaid(employeeId);
+
+        uint oldSalary = employees[employeeId].salary;
+        salary = salary.mul(1 ether);
+
+        employees[employeeId].salary = salary;
+        employees[employeeId].lastPayday = now;
+        totalSalary = totalSalary.add(salary).sub(oldSalary);
+
+        UpdateEmployee(msg.sender, employeeId, salary);
     }
-    
-    function hasEnoughFund() returns (bool) {
+
+    function addFund() payable public returns (uint) {
+        AddFund(msg.sender, msg.value);
+        return address(this).balance;
+    }
+
+    function calculateRunway() public view returns (uint) {
+        if (totalSalary == 0) {
+            return 0;
+        }
+        return address(this).balance.div(totalSalary);
+    }
+
+    function hasEnoughFund() public view returns (bool) {
         return calculateRunway() > 0;
     }
-    
-    function getPaid() employeeExit(msg.sender) {
-        var employee = employees[msg.sender];
 
-        uint nextPayday = employee.lastPayday.add(payDuration);
+    function getPaid() public shouldExist(msg.sender) {
+        address employeeId = msg.sender;
+
+        uint nextPayday = employees[employeeId].lastPayday.add(PAY_DURATION);
         assert(nextPayday < now);
 
-        employee.lastPayday = nextPayday;
-        employee.id.transfer(employee.salary);
+        employees[employeeId].lastPayday = nextPayday;
+        employeeId.transfer(employees[employeeId].salary);
+        GetPaid(msg.sender, employees[employeeId].salary);
     }
 
-    function checkInfo() returns (uint balance, uint runway, uint employeeCount) {
-        balance = this.balance;
-        employeeCount = totalEmployee;
+    function getEmployerInfo() view public returns (uint balance, uint runway, uint employeeCount) {
+        balance = address(this).balance;
+        runway = calculateRunway();
+        employeeCount = employeeAddressList.length;
+    }
 
+    function getEmployeeInfo(uint index) view public returns (address employeeAddress, uint salary, uint lastPayday, uint balance) {
+        address id = employeeAddressList[index];
+        employeeAddress = id;
+        salary = employees[id].salary;
+        lastPayday = employees[id].lastPayday;
+        balance = address(id).balance;
+    }
+
+    function getEmployeeInfoById(address id) view public returns (uint salary, uint lastPayday, uint balance) {
+        salary = employees[id].salary;
+        lastPayday = employees[id].lastPayday;
+        balance = address(id).balance;
+    }
+    
+    function checkInfo() view public returns (uint balance, uint runway, uint employeeCount) {
+        balance = this.balance;
         if (totalSalary > 0) {
             runway = calculateRunway();
         }
+        employeeCount = totoalEmployee;
     }
+
 }
