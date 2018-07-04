@@ -2,25 +2,15 @@ import React, { Component } from 'react'
 import PayrollContract from '../build/contracts/Payroll.json'
 import getWeb3 from './utils/getWeb3'
 
-import { Layout, menu, Spin, Alert, Menu } from 'antd';
+import { Layout, Menu, Spin, Alert } from 'antd';
 
-
-// import Accounts from './components/Accounts';
 import Employer from './components/Employer';
 import Employee from './components/Employee';
-// import Common from './components/Common';
 
-import 'antd/dict/antd.css';
+import 'antd/dist/antd.css';
 import './App.css';
-import MenuItem from 'antd/lib/menu/MenuItem';
 
-const { Header, Content, Footer }  = Layout;
-
-// import './css/oswald.css'
-// import './css/open-sans.css'
-// import './css/pure-min.css'
-// import './App.css';
-
+const { Header, Content, Footer } = Layout;
 
 class App extends Component {
   constructor(props) {
@@ -29,6 +19,7 @@ class App extends Component {
     this.state = {
       storageValue: 0,
       web3: null,
+      mode: 'employer'
     }
   }
 
@@ -68,8 +59,7 @@ class App extends Component {
     // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.setState({
-        accounts,
-        selectedAccount: accounts[0]
+        account: accounts[0],
       });
       Payroll.deployed().then((instance) => {
         PayrollInstance = instance
@@ -80,9 +70,9 @@ class App extends Component {
     })
   }
 
-  onSelectAccount = (ev) => {
+  onSelectTab = ({key}) => {
     this.setState({
-      selectedAccount: ev.target.text
+      mode: key
     });
   }
 
@@ -90,7 +80,7 @@ class App extends Component {
     const { account, payroll, web3, mode } = this.state;
 
     if (!payroll) {
-      return <Spin tip="Loading......."  />;
+      return <Spin tip="Loading..." />;
     }
 
     switch(mode) {
@@ -99,64 +89,37 @@ class App extends Component {
       case 'employee':
         return <Employee account={account} payroll={payroll} web3={web3} />
       default:
-        return <Alert message="Please select the mode" type="info" showIcon />
+        return <Alert message="请选一个模式" type="info" showIcon />
     }
   }
 
-
-  render () {
+  render() {
     return (
       <Layout>
         <Header className="header">
-          <div className="logo">BlockChain system</div>
+          <div className="logo">老董区块链干货铺员工系统</div>
           <Menu
             theme="dark"
             mode="horizontal"
             defaultSelectedKeys={['employer']}
             style={{ lineHeight: '64px' }}
             onSelect={this.onSelectTab}
-            >
-            <MenuItem key="employer">Boss</MenuItem>
-            <MenuItem key="employee">employee</MenuItem>
-            </Menu>
+          >
+            <Menu.Item key="employer">雇主</Menu.Item>
+            <Menu.Item key="employee">雇员</Menu.Item>
+          </Menu>
         </Header>
+        <Content style={{ padding: '0 50px' }}>
+          <Layout style={{ padding: '24px 0', background: '#fff', minHeight: '600px' }}>
+            {this.renderContent()}
+          </Layout>
+        </Content>
+        <Footer style={{ textAlign: 'center' }}>
+          Payroll ©2017 老董区块链干货铺
+        </Footer>
       </Layout>
-    )
+    );
   }
-
-
-  // render() {
-
-  //   const { selectedAccount, accounts, payroll, web3 } = this.state;
-
-  //   if (!accounts) {
-  //     return <div>Loading</div>;
-  //   }
-
-  //   return (
-  //     <div className="App">
-  //       <nav className="navbar pure-menu pure-menu-horizontal">
-  //           <a href="#" className="pure-menu-heading pure-menu-link">Payroll</a>
-  //       </nav>
-
-  //       <main className="container">
-  //         <div className="pure-g">
-  //           <div className="pure-u-1-3">
-  //             <Accounts accounts={accounts} onSelectAccount={this.onSelectAccount}/>
-  //           </div>
-  //           <div className="pure-u-2-3">
-  //             {
-  //               selectedAccount === accounts[0] ?
-  //               <Employer employer={selectedAccount} payroll={payroll} web3={web3} /> :
-  //               <Employee employee={selectedAccount} payroll={payroll} web3={web3} />
-  //             }
-  //             {payroll && <Common account={selectedAccount} payroll={payroll} web3={web3} />}
-  //           </div>
-  //         </div>
-  //       </main>
-  //     </div>
-  //   );
-  // }
 }
 
 export default App
