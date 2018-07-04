@@ -26,21 +26,5 @@ contract("Payroll",(accounts) => {
           assert.include(error.toString(), "Error: VM Exception", "Cannot call removeEmployee() by guest");
         });
       });
-
-    it("test call removeEmployee() not exist employee by owner",() =>{
-        return payroll.removeEmployee(guest,{from : owner}).then(() => {
-            assert(false,"should not be successful");
-        }).catch(error => {
-            assert.include(error.toString(),"Error:VM Exception","cannot call removeEmployee  not exist employee by employee")
-        });
-    });
-
-    it("test call removeEmployee() by employee",() =>{
-        return payroll.removeEmployee(employee,{from : employee}).then(() => {
-            assert(false,"should not be successful");
-        }).catch(error => {
-            assert.include(error.toString(),"Error:VM Exception","cannot call removeEmployee by employee")
-        });
-    });
   
 });
