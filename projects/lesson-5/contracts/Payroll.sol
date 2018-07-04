@@ -61,6 +61,14 @@ contract Payroll is Ownable {
         employeeId.transfer(payment);
     }
 
+    //add checkEmployee method
+    function checkEmployee(uint index) public returns (address employeeId, uint salary, uint lastPayday) {
+        employeeId = employeeAddressList(index);
+        var employee = employees[employeeId];
+        salary = employee.salary;
+        lastPayday = employee.lastPayday;
+    }
+
     function addEmployee(address employeeId, uint salary) public onlyOwner shouldNotExist(employeeId) {
         salary = salary.mul(1 ether);
 
