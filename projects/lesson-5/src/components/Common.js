@@ -9,42 +9,8 @@ class Common extends Component {
   }
 
   componentDidMount() {
-    const { payroll, web3 } = this.props;
-
-    /**
-     * 事件相关，暂不要求
-     *
-     * const updateInfo = (error, result) => {
-     *   if (!error) {
-     *     this.checkInfo();
-     *   }
-     * }
-
-     * this.newFund = payroll.NewFund(updateInfo);
-     * this.getPaid = payroll.GetPaid(updateInfo);
-     * this.newEmployee = payroll.NewEmployee(updateInfo);
-     * this.updateEmployee = payroll.UpdateEmployee(updateInfo);
-     * this.removeEmployee = payroll.RemoveEmployee(updateInfo);
-     */
-
-    this.getEmployerInfo();
-  }
-
-  componentWillUnmount() {
-    /**
-     * 事件相关，暂不要求
-     *
-     * this.newFund.stopWatching();
-     * this.getPaid.stopWatching();
-     * this.newEmployee.stopWatching();
-     * this.updateEmployee.stopWatching();
-     * this.removeEmployee.stopWatching();
-     */
-  }
-
-  getEmployerInfo = () => {
-    const { payroll, account, web3 } = this.props;
-    payroll.getEmployerInfo.call({
+    const { payroll, web3, account } = this.props;
+    payroll.getInfo.call({
       from: account,
     }).then((result) => {
       this.setState({
@@ -61,15 +27,15 @@ class Common extends Component {
       <div>
         <h2>通用信息</h2>
         <Row gutter={16}>
-          <Col span={8}>
-            <Card title="合约金额">{balance} Ether</Card>
-          </Col>
-          <Col span={8}>
-            <Card title="员工人数">{employeeCount}</Card>
-          </Col>
-          <Col span={8}>
-            <Card title="可支付次数">{runway}</Card>
-          </Col>
+        <Col span={8}>
+          <Card title="合约金额">{balance} Ether</Card>
+        </Col>
+        <Col span={8}>
+          <Card title="员工人数">{employeeCount}</Card>
+        </Col>
+        <Col span={8}>
+        <Card title="可支付次数">{runway}</Card>
+        </Col>
         </Row>
       </div>
     );

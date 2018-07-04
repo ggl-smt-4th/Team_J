@@ -42,6 +42,8 @@ contract Payroll is Ownable {
 
     uint constant PAY_DURATION = 10 seconds;
     uint public totalSalary = 0;
+    uint totoalEmployee;
+    address[] employeeList;
     address[] employeeAddressList;
 
     /**
@@ -61,6 +63,13 @@ contract Payroll is Ownable {
         employeeId.transfer(payment);
     }
 
+    function checkEmployee(uint index) returns (address employeeId, uint salary, uint lastPayday) {
+        employeeId = employeeList[index];
+        var employee = employees[employeeId];
+        salary = employee.salary;
+        lastPayday = employee.lastPayday;
+    }
+
     function addEmployee(address employeeId, uint salary) public onlyOwner shouldNotExist(employeeId) {
         salary = salary.mul(1 ether);
 
@@ -70,6 +79,8 @@ contract Payroll is Ownable {
 
         totalSalary = totalSalary.add(salary);
         AddEmployee(msg.sender, employeeId, salary);
+        totoalEmployee = totoalEmployee.add(1);
+        employeeList.push(employeeId);
     }
 
     function removeEmployee(address employeeId) public onlyOwner shouldExist(employeeId) {
@@ -91,6 +102,8 @@ contract Payroll is Ownable {
         // adjust length
         employeeAddressList.length -= 1;
         RemoveEmployee(msg.sender, employeeId);
+        totoalEmployee = totoalEmployee.sub(1);
+        employeeList.push(employeeId)
     }
 
     function changePaymentAddress(address oldAddress, address newAddress) public onlyOwner shouldExist(oldAddress) shouldNotExist(newAddress) {
@@ -159,4 +172,13 @@ contract Payroll is Ownable {
         lastPayday = employees[id].lastPayday;
         balance = address(id).balance;
     }
+    
+    function checkInfo() view public returns (uint balance, uint runway, uint employeeCount) {
+        balance = this.balance;
+        if (totalSalary > 0) {
+            runway = calculateRunway();
+        }
+        employeeCount = totoalEmployee;
+    }
+
 }
