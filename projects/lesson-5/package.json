@@ -49,10 +49,11 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
-    "antd": "^2.13.3",
+    "antd": "^2.13.14",
     "dotenv": "^2.0.0",
     "react": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "react-dom": "^15.4.2",
+    "v8": "^0.1.0"
   },
   "scripts": {
     "start": "node scripts/start.js",
