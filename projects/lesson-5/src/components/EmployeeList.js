@@ -95,6 +95,7 @@ class EmployeeList extends Component {
     const { address, salary, employees } = this.state;
     payroll.addEmployee(address, salary, {
       from: account,
+      gas: 300000,
     }).then(()=>{
       const newEmployee = {
         address,
