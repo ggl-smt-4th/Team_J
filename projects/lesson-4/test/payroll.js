@@ -1,65 +1,131 @@
-var Payroll = artifacts.require("./Payroll.sol");
+const Payroll = artifacts.require("./Payroll.sol");
 
-contract('Payroll', function(accounts) {
+contract('Payroll', function(accounts){
+    const contractOwner = accounts[0];
+    let newEmployee = accounts[1];
+    let contract ;
 
-//addEmployee
+    it("add new employee ", function() {
+         return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.addEmployee(newEmployee, 1, {from: contractOwner});
+        }).then(() => {
+            return contract.employees.call(newEmployee, {from: contractOwner});
+        }).then(employee => {
+            assert.equal(employee[0], newEmployee, 'the new employee added is not the one we expected');
+            assert.equal(employee[1], web3.toWei(1), 'the new employee salary is not 1 eth');
+        });
+    });
 
-	it('Testing addEmployee function by owner', function() {
-		return Payroll.deployed().then(function(instance) {
-			payrollInstance = instance;
+    it("add existed employee ", function() {
+         return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.addEmployee(newEmployee, 1, {from: contractOwner});
+        }).then(employee => {
+            return contract.addEmployee(newEmployee, 1, {from: contractOwner});
+        }).catch(error => {
+            assert.include(error.toString(), "VM Exception while processing transaction: invalid opcode", "employee has already existed");
+        });
+    
+    });
 
-			return payrollInstance.addEmployee(accounts[1], 1， {from: accounts[0]});
-		});
+    it("other person add employee ", function() {
+        let otherPerson = accounts[3];
+         return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.addEmployee(newEmployee, 1, {from: otherPerson});
+        }).catch(error => {
+            assert.include(error.toString(), "VM Exception while processing transaction: revert", "not the contract owner");
+        });
+    
+    });
 
-	}).then(function() {
-		return payrollInstance.get.call(accounts[1]);
+    it("remove not existed employee", function(){
+        let notExisted = accounts[3];
+        return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.removeEmployee(notExisted, {from: contractOwner});
+        }).catch(error => {
+            assert.include(error.toString(), "VM Exception while processing transaction: invalid opcode", "remove not existed employee");
+        });
+    });
 
-	}).then(function(employee) {
-		assert.equal(employee[1].toNumber(), 1, "salary is incorrect.")
-	});
+      it("remove  employee", function(){
+        return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.removeEmployee(newEmployee, {from: contractOwner});
+        }).then(() => {
+            return contract.employees.call(newEmployee, {from: contractOwner});
+        }).then( employee => {
+            assert.equal(employee[0],0x0,'remove employee fail');
+        })
+    });
 
-	it('Testing addEmployee function by non-owner', function() {
-		return Payroll.deployed().then(function (instance) {
-			payrollInstance = instance;
-			return payrollInstance.addEmployee(accounts[2], 1, {from: accounts[0]})
-		});
-	}).then(function() {
-		return payrollInstance.get.call(accounts[2]);
-	}).then(function(employee) {
-		assert.equal(true, 1, "non-owner operation error.")
-	})
-
-
-//removeEmployee
-
-	it("Testing removeEmployee function", function() {
-		return Payroll.deployed().then(function(instance) {
-			payrollInstance = instance;
-
-			return payrollInstance.removeEmployee(accounts[3], 1, {from: accounts[0]})
-		}).then(function() {
-			return payrollInstance.get.call(accounts[3]);
-		}).then(function(employee) {
-			assert.equal(true, 1, "Removing employee error.");
-		}) 
-	})
+    it("other person remove employee ", function() {
+        let otherPerson = accounts[3];
+         return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.removeEmployee(newEmployee, {from: otherPerson});
+        }).catch(error => {
+            assert.include(error.toString(), "VM Exception while processing transaction: revert", "not the contract owner");
+        });
+    
+    });
+   
 });
 
-// getPaid
+contract('Payroll-extra', function(accounts){
+    const contractOwner = accounts[0];
+    let newEmployee = accounts[1];
+    let contract ;
 
-	it("Testing getPaid function", function() {
-		return Payroll.deployed().then(function (instance) {
-			payrollInstance = instance;
+    it('use getPaid', function(){
+        let initEmployeeBalance;
+        return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.addFund({value: web3.toWei('10', 'ether'), from: contractOwner});
+        }).then(() => {
+            return contract.addEmployee(newEmployee, 1, {from: contractOwner});
+        }).then(() => {
+            initEmployeeBalance = web3.eth.getBalance(newEmployee).toNumber();
+            web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [13], id: 0});
+            return contract.getPaid({from:newEmployee});
+        }).then(() => {
+            let afterPaid = web3.eth.getBalance(newEmployee).toNumber();
+            assert(afterPaid > initEmployeeBalance, 'employee getPaid fail');
+        });
+    });
 
-			return payrollInstance.addFund(accounts[4], 1, {from: accounts[0], value: web3.toWei(10, 'ether')})
-		}).then(function() {
-			balance = web3.eth.getBalance(accounts[4]);
-			return payrollInstance.getPaid({from: accounts[4]});
-		}).then(function() {
-			return payrollInstance.employee.call(accounts[4]);
-		}).then(function(employee) {
-			assert.equal(web3.eth.getBalance(accounts[4]).toNumber(), 10, 'Incorrect balance error.')
-		})
-	});
+    it('getPaid less than the payDuration', function(){
+        let initEmployeeBalance;
+        return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.addFund({value: web3.toWei('10', 'ether'), from: contractOwner});
+        }).then(() => {
+            return contract.addEmployee(newEmployee, 1, {from: contractOwner});
+        }).then(() => {
+            initEmployeeBalance = web3.eth.getBalance(newEmployee).toNumber();
+            web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [3], id: 0});
+            return contract.getPaid({from:newEmployee});
+        }).catch(error => {
+            assert.include(error.toString(), "VM Exception while processing transaction: invalid opcode", "getPaid less than the payDuration");
+        });
+    });
 
-});
+    it('not existed employee getPaid', function(){
+        let initEmployeeBalance;
+        let notExistedEmployee = accounts[2];
+        return Payroll.deployed({from: contractOwner }).then( instance => {
+            contract = instance;
+            return contract.addFund({value: web3.toWei('10', 'ether'), from: contractOwner});
+        }).then(() => {
+            return contract.addEmployee(newEmployee, 1, {from: contractOwner});
+        }).then(() => {
+            web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [11], id: 0});
+            return contract.getPaid({from:notExistedEmployee});
+        }).catch(error => {
+            assert.include(error.toString(), "VM Exception while processing transaction: invalid opcode", "not existed employee getPaid");
+        });
+    });
+
+
