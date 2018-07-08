@@ -124,7 +124,7 @@ class EmployeeList extends Component {
                 })
             });
         }).catch((error) => {
-            message.error(error.message);
+            message.error(error.message, "Not enough fund");
         });
     }
 
@@ -142,7 +142,7 @@ class EmployeeList extends Component {
                 employees: employees.filter((employee) => employee.address !== employeeId)
             });
         }).catch((error) => {
-            message.error(error.message);
+            message.error(error.message, "Not enough Fund");
         });
     }
 
