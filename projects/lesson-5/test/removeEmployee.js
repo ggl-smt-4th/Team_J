@@ -26,5 +26,6 @@ contract("Payroll",(accounts) => {
           assert.include(error.toString(), "Error: VM Exception", "Cannot call removeEmployee() by guest");
         });
       });
+
   
 });
